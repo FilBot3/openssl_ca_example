@@ -56,6 +56,8 @@ commonName              = supplied
 emailAddress            = optional
 
 [ req ]
+# Make the user enter information
+prompt = yes
 # Options for the `req` tool (`man req`).
 default_bits        = 2048
 distinguished_name  = req_distinguished_name

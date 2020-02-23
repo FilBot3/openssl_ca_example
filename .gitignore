@@ -1,0 +1,8 @@
+## Vim Files
+*~
+*.sw[a-z0-9]
+
+## OpenSSL Artifacts
+*.pem
+*.crt
+

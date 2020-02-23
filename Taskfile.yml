@@ -1,0 +1,73 @@
+---
+# GitHub: go-task/task
+# https://taskfile.dev
+version: '2'
+
+tasks:
+  01-gen-root-key:
+    desc: Genreate the Root Key Pair and Self-Signed Certificate
+    dir: ca
+    cmds:
+      - openssl genrsa -aes256 -out private/ca.key.pem 4096
+      - chmod 400 private/ca.key.pem
+      - |
+          openssl req \
+            -config openssl_root_ca.cnf \
+            -key private/ca.key.pem \
+            -new \
+            -x509 \
+            -days 7300 \
+            -sha256 \
+            -extensions v3_ca \
+            -out certs/ca.cert.pem
+      - chmod 444 certs/ca.cert.pem
+
+  02-verify-root-cert:
+    desc: Verify the Root CA Certificate
+    dir: ca
+    cmds:
+      - openssl x509 -noout -text -in certs/ca.cert.pem
+
+  03-gen-inter-key:
+    desc: Generate the Intermediate Key Pair and Certificate Signing Request
+    dir: ca
+    cmds:
+      - openssl genrsa -aes256 -out intermediate/private/intermediate.key.pem 4096
+      - chmod 400 intermediate/private/intermediate.key.pem
+      - |
+          openssl req \
+            -config intermediate/openssl_intermediate_ca.cnf \
+            -new \
+            -sha256 \
+            -key intermediate/private/intermediate.key.pem \
+            -out intermediate/csr/intermediate.csr.pem
+
+  04-sign-intermediate-csr:
+    desc: Use the Root CA to sign the Intermediate CA CSR
+    dir: ca
+    cmds:
+      - |
+          openssl ca \
+            -config openssl_root_ca.cnf \
+            -extensions v3_intermediate_ca  \
+            -days 3650 \
+            -notext \
+            -md sha256 \
+            -in intermediate/csr/intermediate.csr.pem \
+            -out intermediate/certs/intermediate.cert.pem
+      - chmod 444 intermediate/certs/intermediate.cert.pem
+
+  05-verify-inter-cert:
+    desc: Verify the Intermediate CA Certificate
+    dir: ca
+    cmds:
+      - openssl x509 -noout -text -in intermediate/certs/intermediate.cert.pem
+      - openssl verify -CAfile certs/ca.cert.pem intermediate/certs/intermediate.cert.pem
+
+  06-create-chain-file:
+    desc: Create the Certificate Authority Chain File
+    dir: ca
+    cmds:
+      - cat intermediate/certs/intermediate.cert.pem certs/ca.cert.pem > intermediate/certs/ca-chain.cert.pem
+      - chmod 444 intermediate/certs/ca-chain.cert.pem
+...

@@ -2,6 +2,9 @@
 
 ## Overview
 
+This is a shorter code version of the JamieLinux Blog post about OpenSSL 
+Certificate Authorities. See the [reference](#references) list.
+
 OpenSSL is a standard in most places for encryption and verification of cryptography
 that people use in most of their lives and may not know it. This is an example
 of how to setup an OpenSSL Certificate Authority both a Root and Intermediate.

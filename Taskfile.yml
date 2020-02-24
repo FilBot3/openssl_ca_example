@@ -70,4 +70,40 @@ tasks:
     cmds:
       - cat intermediate/certs/intermediate.cert.pem certs/ca.cert.pem > intermediate/certs/ca-chain.cert.pem
       - chmod 444 intermediate/certs/ca-chain.cert.pem
+
+  07-gen-client-key:
+    desc: Create a client key and certificate.
+    dir: ca
+    cmds:
+      - openssl genrsa -aes256 -out intermediate/private/www.example.com.key.pem 2048
+      - chmod 400 intermediate/private/www.example.com.key.pem
+      - |
+          openssl req \
+            -config intermediate/openssl_intermediate_ca.cnf \
+            -key intermediate/private/www.example.com.key.pem \
+            -new \
+            -sha256 \
+            -out intermediate/csr/www.example.com.csr.pem
+
+  08-sign-client-cert:
+    desc: Sign the client certificate using Intermediate CA
+    dir: ca
+    cmds:
+      - |
+          openssl ca \
+            -config intermediate/openssl_intermediate_ca.cnf \
+            -extensions server_cert \
+            -days 365 \
+            -notext \
+            -md sha256 \
+            -in intermediate/csr/www.example.com.csr.pem \
+            -out intermediate/certs/www.example.com.cert.pem
+      - chmod 444 intermediate/certs/www.example.com.cert.pem
+
+  09-verify-client-cert:
+    desc: Verify the client certificate
+    dir: ca
+    cmds:
+      - openssl x509 -noout -text -in intermediate/certs/www.example.com.cert.pem
+      - openssl verify -CAfile intermediate/certs/ca-chain.cert.pem intermediate/certs/www.example.com.cert.pem
 ...
